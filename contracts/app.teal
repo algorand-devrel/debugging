@@ -1,0 +1,118 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l19
+txn OnCompletion
+int OptIn
+==
+bnz main_l18
+txn OnCompletion
+int ClearState
+==
+bnz main_l17
+txn OnCompletion
+int CloseOut
+==
+bnz main_l16
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l15
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l14
+txn OnCompletion
+int NoOp
+==
+bnz main_l8
+err
+main_l8:
+txna ApplicationArgs 0
+byte "bootstrap"
+==
+bnz main_l13
+txna ApplicationArgs 0
+byte "xfer"
+==
+bnz main_l11
+err
+main_l11:
+callsub xfer_1
+main_l12:
+return
+main_l13:
+callsub bootstrap_0
+b main_l12
+main_l14:
+int 1
+return
+main_l15:
+int 1
+return
+main_l16:
+int 1
+return
+main_l17:
+int 1
+return
+main_l18:
+int 1
+return
+main_l19:
+int 1
+return
+
+// bootstrap
+bootstrap_0:
+byte "test"
+byte "dope"
+app_global_put
+txna Assets 0
+int 0
+global CurrentApplicationAddress
+callsub sendasset_2
+int 1
+retsub
+
+// xfer
+xfer_1:
+txn NumAppArgs
+int 1
+==
+bz xfer_1_l2
+byte "test"
+app_global_get
+byte "dope"
+==
+assert
+xfer_1_l2:
+txna Assets 0
+txn GroupIndex
+int 1
+-
+gtxns AssetAmount
+int 2
+/
+txn Sender
+callsub sendasset_2
+int 1
+retsub
+
+// send_asset
+sendasset_2:
+store 2
+store 1
+store 0
+itxn_begin
+int axfer
+itxn_field TypeEnum
+load 0
+itxn_field XferAsset
+load 1
+itxn_field AssetAmount
+load 2
+itxn_field AssetReceiver
+itxn_submit
+retsub
