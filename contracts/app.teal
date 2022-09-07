@@ -95,6 +95,9 @@ txnas Assets
 intc_0 // 0
 global CurrentApplicationAddress
 callsub sendasset_2
+intc_0 // 0
+// lol gotcha
+assert
 retsub
 
 // send_asset

@@ -16,6 +16,7 @@ class DebugMe(Application):
             self.send_asset(
                 asset.asset_id(), Int(0), Global.current_application_address()
             ),
+            Assert(Int(0), comment="lol gotcha")
         )
 
     @external
@@ -49,8 +50,6 @@ if __name__ == "__main__":
 
     with open("clear.teal", "w") as f:
         f.write(d.clear_program)
-
-    print(d.contract.dictify())
 
     with open("contract.json", "w") as f:
         f.write(json.dumps(d.contract.dictify()))
