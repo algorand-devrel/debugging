@@ -5,73 +5,6 @@ import json
 import base64
 
 
-def get_config():
-    # TODO make full path not relative
-    with open("../config.json", "r") as f:
-        return json.load(f)
-
-
-def compile_program(client, program):
-    # Read in approval teal source && compile
-    result = client.compile(program)
-    return base64.b64decode(result["result"])
-
-
-def get_programs(client, config):
-    approval_path = "../" + config["contracts"]["approval"]
-    clear_path = "../" + config["contracts"]["clear"]
-    lsig_path = "../" + config["contracts"]["lsig"]
-
-    with open(approval_path, "r") as f:
-        approval = compile_program(client, f.read())
-
-    with open(clear_path, "r") as f:
-        clear = compile_program(client, f.read())
-
-    with open(lsig_path, "r") as f:
-        lsig = compile_program(client, f.read())
-
-    return approval, clear, lsig
-
-
-def get_client(config):
-    token = config["algod"]["token"]
-    address = "{}:{}".format(config["algod"]["host"], config["algod"]["port"])
-    return algod.AlgodClient(token, address)
-
-
-def get_accounts(config):
-    token = config["kmd"]["token"]
-    address = config["kmd"]["address"]
-    name = config["kmd"]["name"]
-    password = config["kmd"]["password"]
-
-    kmd = KMDClient(token, address)
-    wallets = kmd.list_wallets()
-
-    walletID = None
-    for wallet in wallets:
-        if wallet["name"] == name:
-            walletID = wallet["id"]
-            break
-
-    if walletID is None:
-        raise Exception("Wallet not found: {}".format(name))
-
-    walletHandle = kmd.init_wallet_handle(walletID, password)
-
-    try:
-        addresses = kmd.list_keys(walletHandle)
-        privateKeys = [
-            kmd.export_key(walletHandle, password, addr) for addr in addresses
-        ]
-        kmdAccounts = [(addresses[i], privateKeys[i]) for i in range(len(privateKeys))]
-    finally:
-        kmd.release_wallet_handle(walletHandle)
-
-    return kmdAccounts
-
-
 def create_asa(
     client: algod.AlgodClient,
     addr: str,
@@ -115,7 +48,7 @@ def create_app(
     clear_bytes: bytes,
     global_schema,
     local_schema,
-) -> int:
+) -> tuple[int, str]:
     # Get suggested params from network
     sp = client.suggested_params()
 
