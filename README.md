@@ -27,9 +27,9 @@ cd debugging
 
 Create a python virtual environment and install `beaker-pyteal` so we can rebuild the beaker application
 ```sh
-python -m venv .venv
-source .venv/bin/activate
-pip install beaker-pyteal
+$ python -m venv .venv
+$ source .venv/bin/activate
+(.venv)$ pip install beaker-pyteal
 ```
 
 ### Python SDK
@@ -37,8 +37,8 @@ pip install beaker-pyteal
 If using python, keep the virtual environment sourced and cd into the python directory then run the file `main.py`
 
 ```sh
-cd py
-python main.py
+(.venv)$ cd py
+(.venv)$ python main.py
 ```
 
 Proceed to [debugging](#debugging)
@@ -55,6 +55,15 @@ Proceed to [debugging](#debugging)
 
 ### Debugging
 
+If you need to modify the contract logic, make sure the virtualenv is active and run:
+```
+(.venv)$ cd contracts
+(.venv)$ python application.py
+```
+This will overwrite the teal programs and contract json file. 
+
+
+Follow this algorithm to debug:
 ```
 While Broken:
 
