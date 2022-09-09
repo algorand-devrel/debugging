@@ -44,8 +44,8 @@ def main():
     sp = algod_client.suggested_params()
 
     # TODO: Need to cover fees for the inner transaction (uncomment these lines)
-    # sp.flat_fee = True # Tell the SDK we know exactly what our fee should be
-    # sp.fee = 2000 # Cover 2 transaction (outer + inner)
+    sp.flat_fee = True  # Tell the SDK we know exactly what our fee should be
+    sp.fee = 2000  # Cover 2 transaction (outer + inner)
 
     # Create transaction to bootstrap application
     atc = AtomicTransactionComposer()
@@ -55,7 +55,9 @@ def main():
         acct.address,
         sp,
         signer=acct.signer,
-        method_args=[asa_id],
+        method_args=[0],
+        # TODO: this asset id should be passed
+        # method_args=[asa_id],
     )
 
     try:
@@ -78,9 +80,9 @@ def main():
         signer=acct.signer,
         method_args=[
             TransactionWithSigner(
-                txn=transaction.AssetTransferTxn(
-                    acct.address, sp, app_addr, 10, asa_id
-                ),
+                # TODO: make this not fail
+                txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 9, asa_id),
+                #txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 10, asa_id),
                 signer=acct.signer,
             ),
             asa_id,
@@ -103,7 +105,7 @@ def perform_dryrun(atc: AtomicTransactionComposer, client: algod.AlgodClient):
     dryrun_result = DryrunResponse(client.dryrun(drr))
     for txn in dryrun_result.txns:
         if txn.app_call_rejected():
-            print(txn.app_trace(StackPrinterConfig(max_value_width=30)))
+            print(txn.app_trace(StackPrinterConfig(max_value_width=0)))
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ class DebugMe(Application):
 
     @external
     def transfer(self, axfer: abi.AssetTransferTransaction, asset: abi.Asset):
-        """transfers half of the amount sent back to the sender
+        """transfers the amount sent, less 10 units, back to the sender
 
         Args:
             axfer: The asset transfer transaction to the contract
@@ -31,13 +31,17 @@ class DebugMe(Application):
 
         """
         return Seq(
-            Assert(self.asset_id, comment="not bootstrapped"),
+            Assert(
+                asset.asset_id() == self.asset_id, 
+                axfer.get().xfer_asset() == self.asset_id,
+                comment="Incorrect asset"
+            ),
             Assert(
                 axfer.get().asset_receiver() == self.address,
-                comment="receiver must be the application account",
+                comment="Receiver should be application address",
             ),
             self.send_asset(
-                asset.asset_id(), axfer.get().asset_amount() / Int(2), Txn.sender()
+                asset.asset_id(), axfer.get().asset_amount() - Int(10), Txn.sender()
             ),
         )
 
