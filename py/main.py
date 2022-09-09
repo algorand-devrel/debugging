@@ -1,4 +1,3 @@
-import base64
 from algosdk.v2client import algod
 from algosdk.dryrun_results import DryrunResponse, StackPrinterConfig
 from algosdk.atomic_transaction_composer import (
