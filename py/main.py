@@ -1,6 +1,6 @@
 import base64
 from algosdk.v2client import algod
-from algosdk.dryrun_results import DryrunResponse
+from algosdk.dryrun_results import DryrunResponse, StackPrinterConfig
 from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     TransactionWithSigner,
@@ -41,11 +41,13 @@ def main():
         algod_client, acct.address, acct.private_key, "tmp_asset", "tmp", 10000, 0
     )
 
-    # Create group txn
     sp = algod_client.suggested_params()
-    sp.flat_fee = True
-    sp.fee = 3000
 
+    # TODO: Need to cover fees for the inner transaction (uncomment these lines)
+    # sp.flat_fee = True # Tell the SDK we know exactly what our fee should be
+    # sp.fee = 2000 # Cover 2 transaction (outer + inner)
+
+    # Create transaction to bootstrap application
     atc = AtomicTransactionComposer()
     atc.add_method_call(
         app_id,
@@ -55,41 +57,53 @@ def main():
         signer=acct.signer,
         method_args=[asa_id],
     )
-    axfer = TransactionWithSigner(
-        txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 10, asa_id),
-        signer=acct.signer,
-    )
 
+    try:
+        atc.execute(algod_client, 4)
+    except Exception as e:
+        le = LogicException(e, approval_program, approval_map)
+        print(
+            f"A Logic Exception was encountered: '{le.msg[:15]}...'\n\t{le.trace()}\n"
+        )
+        perform_dryrun(atc, algod_client)
+        return
+
+    # Create group transaction to send asset and call method
+    atc = AtomicTransactionComposer()
     atc.add_method_call(
         app_id,
         contract.get_method_by_name("transfer"),
         acct.address,
         sp,
         signer=acct.signer,
-        method_args=[axfer, asa_id],
+        method_args=[
+            TransactionWithSigner(
+                txn=transaction.AssetTransferTxn(
+                    acct.address, sp, app_addr, 10, asa_id
+                ),
+                signer=acct.signer,
+            ),
+            asa_id,
+        ],
     )
-
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        print(e)
         le = LogicException(e, approval_program, approval_map)
-        print(le.trace(10))
+        print(
+            f"A Logic Exception was encountered: '{le.msg[:15]}...'\n\t{le.trace()}\n"
+        )
+        perform_dryrun(atc, algod_client)
+        return
 
 
-def create_dryrun():
-    pass
-    # signed = atc.gather_signatures()
-    # drr = transaction.create_dryrun(client, signed)
-    # dr = client.dryrun(drr)
-
-    # dryrun_result = DryrunResponse(dr)
-    # for txn in dryrun_result.txns:
-    #    if txn.app_call_rejected():
-    #        error_msg = txn.app_call_messages[-1]
-    #        le = LogicException(error_msg, approval_program, approval_map)
-    #        print(le.__dict__)
-    #        print(txn.app_trace(StackPrinterConfig(max_value_width=10)))
+def perform_dryrun(atc: AtomicTransactionComposer, client: algod.AlgodClient):
+    signed = atc.gather_signatures()
+    drr = transaction.create_dryrun(client, signed)
+    dryrun_result = DryrunResponse(client.dryrun(drr))
+    for txn in dryrun_result.txns:
+        if txn.app_call_rejected():
+            print(txn.app_trace(StackPrinterConfig(max_value_width=30)))
 
 
 if __name__ == "__main__":
