@@ -1,6 +1,6 @@
 #pragma version 7
 intcblock 0 1 4
-bytecblock 0x696e697469616c697a6564
+bytecblock 0x61737365745f6964
 txn NumAppArgs
 intc_0 // 0
 ==
@@ -10,7 +10,7 @@ pushbytes 0x34494d87 // "bootstrap(asset)void"
 ==
 bnz main_l5
 txna ApplicationArgs 0
-pushbytes 0x46231792 // "xfer(axfer,asset)void"
+pushbytes 0x54b01cd5 // "transfer(axfer,asset)void"
 ==
 bnz main_l4
 err
@@ -38,7 +38,7 @@ intc_2 // axfer
 assert
 load 0
 load 1
-callsub xfer_3
+callsub transfer_3
 intc_1 // 1
 return
 main_l5:
@@ -80,24 +80,22 @@ return
 bootstrap_1:
 store 2
 intc_0 // 0
-bytec_0 // "initialized"
+bytec_0 // "asset_id"
 app_global_get_ex
 store 4
 store 3
 load 4
 !
 assert
-bytec_0 // "initialized"
-intc_1 // 1
+bytec_0 // "asset_id"
+load 2
+txnas Assets
 app_global_put
 load 2
 txnas Assets
 intc_0 // 0
 global CurrentApplicationAddress
 callsub sendasset_2
-intc_0 // 0
-// lol gotcha
-assert
 retsub
 
 // send_asset
@@ -114,16 +112,24 @@ load 6
 itxn_field AssetAmount
 load 7
 itxn_field AssetReceiver
+intc_0 // 0
+itxn_field Fee
 itxn_submit
 retsub
 
-// xfer
-xfer_3:
+// transfer
+transfer_3:
 store 9
 store 8
-bytec_0 // "initialized"
+bytec_0 // "asset_id"
 app_global_get
-// must be initialized
+// not bootstrapped
+assert
+load 8
+gtxns AssetReceiver
+global CurrentApplicationAddress
+==
+// receiver must be the application account
 assert
 load 9
 txnas Assets

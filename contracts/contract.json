@@ -1,1 +1,0 @@
-{"name": "DebugMe", "methods": [{"name": "bootstrap", "args": [{"type": "asset", "name": "asset"}], "returns": {"type": "void"}}, {"name": "xfer", "args": [{"type": "axfer", "name": "axfer"}, {"type": "asset", "name": "asset"}], "returns": {"type": "void"}}], "networks": {}}

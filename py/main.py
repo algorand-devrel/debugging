@@ -1,39 +1,20 @@
-import json
-from operator import methodcaller
-from algosdk.v2client import *
-from algosdk.dryrun_results import *
-from algosdk.atomic_transaction_composer import *
+import base64
+from algosdk.v2client import algod
+from algosdk.dryrun_results import DryrunResponse
+from algosdk.atomic_transaction_composer import (
+    AtomicTransactionComposer,
+    TransactionWithSigner,
+)
 from algosdk.future import transaction
-from algosdk.source_map import SourceMap
-from util import create_app, create_asa
+from util import (
+    create_app,
+    create_asa,
+    get_approval_program,
+    get_clear_program,
+    get_contract,
+)
 from beaker import sandbox
-from beaker.client.logic_error import parse_logic_error, LogicException
-
-
-def compile(client: algod.AlgodClient, program: str) -> tuple[bytes, SourceMap]:
-    result = client.compile(program, source_map=True)
-    program_binary = base64.b64decode(result["result"])
-    src_map = SourceMap(result["sourcemap"])
-    return [program_binary, src_map]
-
-
-def get_approval_program(client: algod.AlgodClient) -> tuple[str, bytes, SourceMap]:
-    with open("../contracts/app.teal", "r") as f:
-        approval_program = f.read()
-    approval_bin, approval_map = compile(client, approval_program)
-    return approval_program, approval_bin, approval_map
-
-
-def get_clear_program(client: algod.AlgodClient) -> tuple[str, bytes, SourceMap]:
-    with open("../contracts/clear.teal", "r") as f:
-        clear_program = f.read()
-    clear_bin, clear_map = compile(client, clear_program)
-    return clear_program, clear_bin, clear_map
-
-
-def get_contract() -> abi.Contract:
-    with open("../contracts/contract.json", "r") as f:
-        return abi.Contract.from_json(f.read())
+from beaker.client.logic_error import LogicException
 
 
 def main():
@@ -62,6 +43,8 @@ def main():
 
     # Create group txn
     sp = algod_client.suggested_params()
+    sp.flat_fee = True
+    sp.fee = 3000
 
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -76,9 +59,10 @@ def main():
         txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 10, asa_id),
         signer=acct.signer,
     )
+
     atc.add_method_call(
         app_id,
-        contract.get_method_by_name("xfer"),
+        contract.get_method_by_name("transfer"),
         acct.address,
         sp,
         signer=acct.signer,
@@ -88,8 +72,13 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        raise LogicException(e, approval_program, approval_map)
+        print(e)
+        le = LogicException(e, approval_program, approval_map)
+        print(le.trace(10))
 
+
+def create_dryrun():
+    pass
     # signed = atc.gather_signatures()
     # drr = transaction.create_dryrun(client, signed)
     # dr = client.dryrun(drr)

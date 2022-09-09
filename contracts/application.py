@@ -1,28 +1,41 @@
-import json
 from beaker import *
 from pyteal import *
 
 
 class DebugMe(Application):
 
-    initialized = ApplicationStateValue(TealType.uint64, static=True)
+    asset_id = ApplicationStateValue(TealType.uint64, static=True)
 
     @external
     def bootstrap(self, asset: abi.Asset):
+        """bootstraps the application to set the initialized flag and opt into the asset passed
+
+        Args:
+            asset: Asset this contract should opt in to
+
+        """
         return Seq(
-            # Set initialized
-            self.initialized.set(Int(1)),
-            # Opt in
-            self.send_asset(
-                asset.asset_id(), Int(0), Global.current_application_address()
-            ),
-            Assert(Int(0), comment="lol gotcha")
+            # Set asset id we intend to opt in to
+            self.asset_id.set(asset.asset_id()),
+            # Opt application account in to asset
+            self.send_asset(asset.asset_id(), Int(0), self.address),
         )
 
     @external
-    def xfer(self, axfer: abi.AssetTransferTransaction, asset: abi.Asset):
+    def transfer(self, axfer: abi.AssetTransferTransaction, asset: abi.Asset):
+        """transfers half of the amount sent back to the sender
+
+        Args:
+            axfer: The asset transfer transaction to the contract
+            asset: The asset that this contract has opted in to
+
+        """
         return Seq(
-            Assert(self.initialized, comment="must be initialized"),
+            Assert(self.asset_id, comment="not bootstrapped"),
+            Assert(
+                axfer.get().asset_receiver() == self.address,
+                comment="receiver must be the application account",
+            ),
             self.send_asset(
                 asset.asset_id(), axfer.get().asset_amount() / Int(2), Txn.sender()
             ),
@@ -30,29 +43,17 @@ class DebugMe(Application):
 
     @internal(TealType.none)
     def send_asset(self, id, amt, rcv):
-        return Seq(
-            InnerTxnBuilder.Execute(
-                {
-                    TxnField.type_enum: TxnType.AssetTransfer,
-                    TxnField.xfer_asset: id,
-                    TxnField.asset_amount: amt,
-                    TxnField.asset_receiver: rcv,
-                }
-            ),
+        """send asset handles executing the inner transaction to send an asset"""
+        return InnerTxnBuilder.Execute(
+            {
+                TxnField.type_enum: TxnType.AssetTransfer,
+                TxnField.xfer_asset: id,
+                TxnField.asset_amount: amt,
+                TxnField.asset_receiver: rcv,
+                TxnField.fee: Int(0),
+            }
         )
 
 
 if __name__ == "__main__":
-    d = DebugMe()
-
-    with open("app.teal", "w") as f:
-        f.write(d.approval_program)
-
-    with open("clear.teal", "w") as f:
-        f.write(d.clear_program)
-
-    with open("contract.json", "w") as f:
-        f.write(json.dumps(d.contract.dictify()))
-
-    with open("spec.json", "w") as f:
-        f.write(json.dumps(d.application_spec()))
+    DebugMe().dump("./artifacts")

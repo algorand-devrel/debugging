@@ -1,8 +1,38 @@
 from algosdk.v2client import algod
 from algosdk.kmd import KMDClient
 from algosdk.future import transaction
-import json
+from algosdk.source_map import SourceMap
+from algosdk import abi
 import base64
+
+
+def compile(client: algod.AlgodClient, program: str) -> tuple[bytes, SourceMap]:
+    result = client.compile(program, source_map=True)
+    program_binary = base64.b64decode(result["result"])
+    src_map = SourceMap(result["sourcemap"])
+    return [program_binary, src_map]
+
+
+artifact_path = "../contracts/artifacts/"
+
+
+def get_approval_program(client: algod.AlgodClient) -> tuple[str, bytes, SourceMap]:
+    with open(artifact_path + "approval.teal", "r") as f:
+        approval_program = f.read()
+    approval_bin, approval_map = compile(client, approval_program)
+    return approval_program, approval_bin, approval_map
+
+
+def get_clear_program(client: algod.AlgodClient) -> tuple[str, bytes, SourceMap]:
+    with open(artifact_path + "clear.teal", "r") as f:
+        clear_program = f.read()
+    clear_bin, clear_map = compile(client, clear_program)
+    return clear_program, clear_bin, clear_map
+
+
+def get_contract() -> abi.Contract:
+    with open(artifact_path + "contract.json", "r") as f:
+        return abi.Contract.from_json(f.read())
 
 
 def create_asa(
