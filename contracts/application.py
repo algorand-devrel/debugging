@@ -32,9 +32,9 @@ class DebugMe(Application):
         """
         return Seq(
             Assert(
-                asset.asset_id() == self.asset_id, 
+                asset.asset_id() == self.asset_id,
                 axfer.get().xfer_asset() == self.asset_id,
-                comment="Incorrect asset"
+                comment="Incorrect asset",
             ),
             Assert(
                 axfer.get().asset_receiver() == self.address,
@@ -44,6 +44,20 @@ class DebugMe(Application):
                 asset.asset_id(), axfer.get().asset_amount() - Int(10), Txn.sender()
             ),
         )
+
+    # TODO: this call will fail with invalid asset reference because the
+    # asset argument is a uint not an asset reference.
+    # Change the method signature to specify that it wants an asset reference instead
+    # of the Uint64 and get its id using `.asset_id` instead of `.get`.
+    # See above for examples.
+    @external
+    def withdraw(self, asset: abi.Uint64):
+        """withdraw allows 1 unit of the asset passed to be sent to the caller
+
+        Args:
+            asset: The asset we're set up to handle
+        """
+        return self.send_asset(asset.get(), Int(1), Txn.sender())
 
     @internal(TealType.none)
     def send_asset(self, id, amt, rcv):

@@ -4,17 +4,35 @@ bytecblock 0x61737365745f6964
 txn NumAppArgs
 intc_0 // 0
 ==
-bnz main_l6
+bnz main_l8
 txna ApplicationArgs 0
 pushbytes 0x34494d87 // "bootstrap(asset)void"
 ==
-bnz main_l5
+bnz main_l7
 txna ApplicationArgs 0
 pushbytes 0x54b01cd5 // "transfer(axfer,asset)void"
 ==
-bnz main_l4
+bnz main_l6
+txna ApplicationArgs 0
+pushbytes 0x21f1ddff // "withdraw(uint64)void"
+==
+bnz main_l5
 err
-main_l4:
+main_l5:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+btoi
+callsub withdraw_4
+intc_1 // 1
+return
+main_l6:
 txn OnCompletion
 intc_0 // NoOp
 ==
@@ -41,7 +59,7 @@ load 1
 callsub transfer_3
 intc_1 // 1
 return
-main_l5:
+main_l7:
 txn OnCompletion
 intc_0 // NoOp
 ==
@@ -56,13 +74,13 @@ getbyte
 callsub bootstrap_1
 intc_1 // 1
 return
-main_l6:
+main_l8:
 txn OnCompletion
 intc_0 // NoOp
 ==
-bnz main_l8
+bnz main_l10
 err
-main_l8:
+main_l10:
 txn ApplicationID
 intc_0 // 0
 ==
@@ -147,6 +165,13 @@ load 8
 gtxns AssetAmount
 pushint 10 // 10
 -
+txn Sender
+callsub sendasset_2
+retsub
+
+// withdraw
+withdraw_4:
+intc_1 // 1
 txn Sender
 callsub sendasset_2
 retsub

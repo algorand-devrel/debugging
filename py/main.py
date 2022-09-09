@@ -44,8 +44,8 @@ def main():
     sp = algod_client.suggested_params()
 
     # TODO: Need to cover fees for the inner transaction (uncomment these lines)
-    sp.flat_fee = True  # Tell the SDK we know exactly what our fee should be
-    sp.fee = 2000  # Cover 2 transaction (outer + inner)
+    # sp.flat_fee = True  # Tell the SDK we know exactly what our fee should be
+    # sp.fee = 2000  # Cover 2 transaction (outer + inner)
 
     # Create transaction to bootstrap application
     atc = AtomicTransactionComposer()
@@ -55,8 +55,8 @@ def main():
         acct.address,
         sp,
         signer=acct.signer,
+        # TODO: the asset id should be passed
         method_args=[0],
-        # TODO: this asset id should be passed
         # method_args=[asa_id],
     )
 
@@ -87,6 +87,26 @@ def main():
             ),
             asa_id,
         ],
+    )
+    try:
+        atc.execute(algod_client, 4)
+    except Exception as e:
+        le = LogicException(e, approval_program, approval_map)
+        print(
+            f"A Logic Exception was encountered: '{le.msg[:15]}...'\n\t{le.trace()}\n"
+        )
+        perform_dryrun(atc, algod_client)
+        return
+
+    # Create group transaction to send asset and call method
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id,
+        contract.get_method_by_name("withdraw"),
+        acct.address,
+        sp,
+        signer=acct.signer,
+        method_args=[asa_id],
     )
     try:
         atc.execute(algod_client, 4)
