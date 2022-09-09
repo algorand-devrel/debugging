@@ -82,7 +82,7 @@ def main():
             TransactionWithSigner(
                 # TODO: make this not fail
                 txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 9, asa_id),
-                #txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 10, asa_id),
+                # txn=transaction.AssetTransferTxn(acct.address, sp, app_addr, 10, asa_id),
                 signer=acct.signer,
             ),
             asa_id,
