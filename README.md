@@ -6,6 +6,8 @@ This repo contains examples to demonstrate how a developer might approach debugg
 
 Make sure you have the [sandbox](https://github.com/algorand/sandbox) installed and running locally
 
+Documentation to help understanding the tools available is [here](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/debugging/)
+
 ## Contracts
 
 contracts/application.py - Beaker PyTeal Application
