@@ -53,7 +53,19 @@ Proceed to [debugging](#debugging)
 
 ### Goal/Tealdbg
 
+When using the `goal` and `tealdbg` process each step is contained within its own file. You may debug the step by specifying an argument after the script e.g. `./0_deploy debug`. Note this uses `sandbox` by default, but if you have a node running locally modify the code to remove the variable `SB`.
 
+```sh
+$ cd sh
+$ ./0_deploy.sh
+$ ./0_deploy.sh debug
+$ ./1_bootstrap.sh
+$ ./1_bootstrap.sh debug
+$ ./2_transfer.sh
+$ ./2_transfer.sh debug
+$ ./3_withdraw.sh
+$ ./3_withdraw.sh debug
+```
 
 ### Debugging
 
