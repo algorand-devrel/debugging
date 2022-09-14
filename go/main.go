@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/types"
 )
@@ -25,14 +28,11 @@ func main() {
 	signer := future.BasicAccountTransactionSigner{Account: acct}
 
 	// Get approval/clear programs compiled
-	approvalProgram, approvalBin, approvalMap := getApprovalProgram(client)
+	_, approvalBin, _ := getApprovalProgram(client)
 	_, clearBin, _ := getClearProgram(client)
 
 	// Get the contract
 	contract := getContract()
-
-	log.Printf("%+v %+v %+v", approvalProgram, approvalBin, approvalMap)
-	log.Printf("%+v", clearBin)
 
 	appAddr, appId := createApp(
 		client,
@@ -71,6 +71,7 @@ func main() {
 	atc.AddMethodCall(makeParams(mcp, meth, []interface{}{asaId}))
 	result, err := atc.Execute(client, context.Background(), 4)
 	if err != nil {
+		performDryrun(client, "bootstrap", atc)
 		log.Fatalf("Failed to execute bootstrap: %+v", err)
 	}
 	log.Printf("Bootstrapped: %+v", result.ConfirmedRound)
@@ -87,12 +88,13 @@ func main() {
 
 	meth, err = contract.GetMethodByName("transfer")
 	if err != nil {
-		log.Fatalf("Failed to get method bootstrap: %+v", err)
+		log.Fatalf("Failed to get method: %+v", err)
 	}
 	atc.AddMethodCall(makeParams(mcp, meth, []interface{}{axfer, asaId}))
 	result, err = atc.Execute(client, context.Background(), 4)
 	if err != nil {
-		log.Fatalf("Failed to execute bootstrap: %+v", err)
+		performDryrun(client, "transfer", atc)
+		log.Fatalf("Failed to execute transfer: %+v", err)
 	}
 	log.Printf("Transferred: %+v", result.ConfirmedRound)
 
@@ -100,27 +102,54 @@ func main() {
 	atc = future.AtomicTransactionComposer{}
 	meth, err = contract.GetMethodByName("withdraw")
 	if err != nil {
-		log.Fatalf("Failed to get method bootstrap: %+v", err)
+		log.Fatalf("Failed to get method: %+v", err)
 	}
 	atc.AddMethodCall(makeParams(mcp, meth, []interface{}{asaId}))
 	result, err = atc.Execute(client, context.Background(), 4)
 	if err != nil {
-		log.Fatalf("Failed to execute bootstrap: %+v", err)
+		performDryrun(client, "withdraw", atc)
+		log.Fatalf("Failed to execute withdraw: %+v", err)
 	}
 	log.Printf("Withdrew: %+v", result.ConfirmedRound)
 
 }
 
-func performDryrun() {
+func performDryrun(client *algod.Client, name string, atc future.AtomicTransactionComposer) {
+	stxnBlobs, err := atc.GatherSignatures()
+	if err != nil {
+		log.Fatalf("Failed to get txns from atc: %+v", err)
+	}
 
-	// drr, err := future.CreateDryrun(client, []types.SignedTxn{s_pay, s_app, s_logic}, nil, context.Background())
-	// if err != nil {
-	// 	log.Fatalf("Failed to create dryrun: %+v", err)
-	// }
+	stxns := []types.SignedTxn{}
+	for _, txn := range stxnBlobs {
+		stxn := types.SignedTxn{}
+		msgpack.Decode(txn, &stxn)
+		stxns = append(stxns, stxn)
+	}
 
-	// filename := "go-drr.msgp"
-	// os.WriteFile(filename, msgpack.Encode(drr), 0666)
-	// log.Printf("Wrote to file: %s", filename)
+	drr, err := future.CreateDryrun(client, stxns, nil, context.Background())
+	if err != nil {
+		log.Fatalf("Failed to create dryrun: %+v", err)
+	}
+
+	filename := fmt.Sprintf("%s.dr.msgp", name)
+	os.WriteFile(filename, msgpack.Encode(drr), 0666)
+
+	res, err := client.TealDryrun(drr).Do(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to create dryrun: %+v", err)
+	}
+
+	drresp, err := future.NewDryrunResponse(res)
+	if err != nil {
+		log.Fatalf("Failed to parse dryrun respose: %+v", err)
+	}
+
+	for idx, txResult := range drresp.Txns {
+		if txResult.AppCallRejected() {
+			fmt.Printf("Failed app call in %d:\n%s", idx, txResult.GetAppCallTrace(future.DefaultStackPrinterConfig()))
+		}
+	}
 }
 
 func makeParams(mcp future.AddMethodCallParams, m abi.Method, a []interface{}) future.AddMethodCallParams {
