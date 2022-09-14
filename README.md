@@ -49,7 +49,7 @@ Proceed to [debugging](#debugging)
 
 If using the JS SDK, cd into the `js` directory and install the required modules
 ```
-cd `js`
+cd js
 npm install
 ```
 
