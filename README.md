@@ -47,9 +47,25 @@ Proceed to [debugging](#debugging)
 
 ### JS SDK
 
+If using the JS SDK, cd into the `js` directory and install the required modules
+```
+cd `js`
+npm install
+```
+
+Then run the demo program
+```
+npm run demo
+```
+
+Proceed to [debugging](#debugging)
+
 ### Go SDK
 
+TODO
 ### Java SDK
+
+TODO
 
 ### Goal/Tealdbg
 
