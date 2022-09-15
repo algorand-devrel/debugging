@@ -60,12 +60,14 @@ ${GOAL} app method \
   --fee 2000
 
 # Transfer
+# TODO: Prevent underflow by increasing the value you pass
+# --amount 10
 if [ -z ${1+x} ]; then
   ${GOAL} asset send \
     --from ${ACCT} \
     --to ${APP_ADDR} \
     --assetid ${ASSET_ID} \
-    --amount 10 \
+    --amount 9 \
     --out axfer.txn
   ${GOAL} app method \
     --from ${ACCT} \
@@ -79,7 +81,7 @@ else
     --from ${ACCT} \
     --to ${APP_ADDR} \
     --assetid ${ASSET_ID} \
-    --amount 10 \
+    --amount 9 \
     --out axfer.txn
   ${GOAL} app method \
     --from ${ACCT} \
