@@ -75,6 +75,9 @@ ${GOAL} app method \
   --fee 2000
 
 # Withdraw
+# TODO: Fix the pyteal (and regen the teal) so that expect
+# an asset rather than a uint64 as the argument
+# --method "withdraw(asset)void"
 if [ -z ${1+x} ]; then
   ${GOAL} app method \
     --from ${ACCT} \
