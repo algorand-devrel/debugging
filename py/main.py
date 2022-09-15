@@ -64,7 +64,7 @@ def main():
     except Exception as e:
         le = LogicException(e, approval_program, approval_map)
         print(
-            f"A Logic Exception was encountered: '{le.msg[:40]}...'\n\t{le.trace()}\n"
+            f"A Logic Exception was encountered: '{le.msg[:15]}...'\n\t{le.trace()}\n"
         )
         perform_dryrun(atc, algod_client)
         return
@@ -92,13 +92,12 @@ def main():
     except Exception as e:
         le = LogicException(e, approval_program, approval_map)
         print(
-            f"A Logic Exception was encountered: '{le.msg[:55]}...'\n\t{le.trace()}\n"
+            f"A Logic Exception was encountered: '{le.msg[:15]}...'\n\t{le.trace()}\n"
         )
         perform_dryrun(atc, algod_client)
         return
 
     # Create group transaction to send asset and call method
-    # See TODO in contracts/application.py
     atc = AtomicTransactionComposer()
     atc.add_method_call(
         app_id,
@@ -113,7 +112,7 @@ def main():
     except Exception as e:
         le = LogicException(e, approval_program, approval_map)
         print(
-            f"A Logic Exception was encountered: '{le.msg[:50]}...'\n\t{le.trace()}\n"
+            f"A Logic Exception was encountered: '{le.msg[:15]}...'\n\t{le.trace()}\n"
         )
         perform_dryrun(atc, algod_client)
         return
