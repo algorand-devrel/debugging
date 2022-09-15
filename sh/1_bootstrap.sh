@@ -52,20 +52,22 @@ ${GOAL} clerk send \
   --amount 200000
 
 # Bootstrap
+# TODO: Need to cover the fees for the inner transactions
+# --fee 2000
+# TODO: Pass the Asset ID as an argument instead of 0.
+# --arg ${ASSET_ID}
 if [ -z ${1+x} ]; then
   ${GOAL} app method \
     --from ${ACCT} \
     --app-id ${APP_ID} \
     --method "bootstrap(asset)void" \
-    --arg ${ASSET_ID} \
-    --fee 2000
+    --arg 0
 else
   ${GOAL} app method \
     --from ${ACCT} \
     --app-id ${APP_ID} \
     --method "bootstrap(asset)void" \
-    --arg ${ASSET_ID} \
-    --fee 2000 \
+    --arg 0 \
     --dryrun-dump \
     --out bootstrap.dr
   
