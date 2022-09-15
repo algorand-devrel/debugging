@@ -1,3 +1,4 @@
+import os
 from beaker import *
 from pyteal import *
 
@@ -50,6 +51,15 @@ class DebugMe(Application):
     # Change the method signature to specify that it wants an asset reference instead
     # of the Uint64 and get its id using `.asset_id` instead of `.get`.
     # See above for examples.
+
+    # Create group transaction to send asset and call method
+    #     If you need to modify the contract logic, make sure the virtualenv is active and run:
+    # ```
+    # (.venv)$ cd contracts
+    # (.venv)$ python application.py
+    # ```
+    # This will overwrite the teal programs and contract json file.
+
     @external
     def withdraw(self, asset: abi.Uint64):
         """withdraw allows 1 unit of the asset passed to be sent to the caller
@@ -59,6 +69,15 @@ class DebugMe(Application):
         """
         return self.send_asset(asset.get(), Int(1), Txn.sender())
 
+        
+    # @external    
+    # def withdraw(self, asset: abi.Asset):
+    #     """withdraw allows 1 unit of the asset passed to be sent to the caller
+    #     Args:
+    #         asset: The asset we're set up to handle
+    #     """
+    #     return self.send_asset(asset.asset_id(), Int(1), Txn.sender())
+    
     @internal(TealType.none)
     def send_asset(self, id, amt, rcv):
         """send asset handles executing the inner transaction to send an asset"""
