@@ -10,13 +10,13 @@ Documentation to help understanding the tools available is [here](https://develo
 
 ## Contracts
 
-contracts/application.py - Beaker PyTeal Application
-contracts/artifacts/approval.teal - The approval program generated from the Beaker application
-contracts/artifacts/clear.teal - The clear program generated from the Beaker application
-contracts/artifacts/contract.json - The ARC4 ABI Contract specification from the Beaker application
-contracts/artifacts/DebugMe.json - The Beaker Application specification from the Beaker application
+- contracts/application.py - Beaker PyTeal Application
+- contracts/artifacts/approval.teal - The approval program generated from the Beaker application
+- contracts/artifacts/clear.teal - The clear program generated from the Beaker application
+- contracts/artifacts/contract.json - The ARC4 ABI Contract specification from the Beaker application
+- contracts/artifacts/DebugMe.json - The Beaker Application specification from the Beaker application
 
-## Flow
+## Usage 
 
 ### Setup
 
@@ -62,10 +62,10 @@ Proceed to [debugging](#debugging)
 
 ### Go SDK
 
-TODO
-### Java SDK
-
-TODO
+```
+go get
+go run ./*.go
+```
 
 ### Goal/Tealdbg
 
@@ -83,7 +83,7 @@ $ ./3_withdraw.sh
 $ ./3_withdraw.sh debug
 ```
 
-### Debugging
+## Debugging
 
 If you need to modify the contract logic, make sure the virtualenv is active and run:
 ```
