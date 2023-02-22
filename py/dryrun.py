@@ -4,7 +4,7 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     TransactionWithSigner,
 )
-from algosdk.future import transaction
+from algosdk import transaction
 from util import (
     create_app,
     create_asa,
@@ -13,7 +13,7 @@ from util import (
     get_contract,
 )
 from beaker import sandbox
-from beaker.client.logic_error import LogicException
+import os
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     algod_client = sandbox.clients.get_algod_client()
     acct = sandbox.kmd.get_accounts().pop()
 
-    approval_program, approval_bin, approval_map = get_approval_program(algod_client)
+    _, approval_bin, _ = get_approval_program(algod_client)
     _, clear_bin, _ = get_clear_program(algod_client)
 
     contract = get_contract()
@@ -62,10 +62,7 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        le = LogicException(e, approval_program, approval_map)
-        print(
-            f"A Logic Exception was encountered: '{le.msg[:40]}...'\n\t{le.trace()}\n"
-        )
+        print(f"A Logic Exception was encountered: '{e}\n")
         perform_dryrun(atc, algod_client)
         return
 
@@ -90,10 +87,7 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        le = LogicException(e, approval_program, approval_map)
-        print(
-            f"A Logic Exception was encountered: '{le.msg[:55]}...'\n\t{le.trace()}\n"
-        )
+        print(f"A Logic Exception was encountered: '{e}\n")
         perform_dryrun(atc, algod_client)
         return
 
@@ -111,10 +105,7 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        le = LogicException(e, approval_program, approval_map)
-        print(
-            f"A Logic Exception was encountered: '{le.msg[:50]}...'\n\t{le.trace()}\n"
-        )
+        print(f"A Logic Exception was encountered: '{e}\n")
         perform_dryrun(atc, algod_client)
         return
 
@@ -125,7 +116,8 @@ def perform_dryrun(atc: AtomicTransactionComposer, client: algod.AlgodClient):
     dryrun_result = DryrunResponse(client.dryrun(drr))
     for txn in dryrun_result.txns:
         if txn.app_call_rejected():
-            print(txn.app_trace(StackPrinterConfig(max_value_width=0)))
+            width = round(os.get_terminal_size().columns / 3)
+            print(txn.app_trace(StackPrinterConfig(max_value_width=width)))
 
 
 if __name__ == "__main__":
