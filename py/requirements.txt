@@ -2,7 +2,7 @@ beaker-pyteal==0.5.4
 cffi==1.15.1
 docstring-parser==0.14.1
 msgpack==1.0.4
-py-algorand-sdk @ git+https://github.com/barnjamin/py-algorand-sdk@c6105afb86d32c5dd476e0ac3ecd8b480318e023
+py-algorand-sdk @ git+https://github.com/joe-p/py-algorand-sdk@239b1b265a35a8e833a33746c0cbf0506762908f
 pycparser==2.21
 pycryptodomex==3.17
 PyNaCl==1.5.0

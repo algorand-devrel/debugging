@@ -62,8 +62,7 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        print(f"A Logic Exception was encountered: '{e}\n")
-        perform_dryrun(atc, algod_client)
+        perform_simulate(atc, algod_client)
         return
 
     # Create group transaction to send asset and call method
@@ -87,8 +86,7 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        print(f"A Logic Exception was encountered: '{e}\n")
-        perform_dryrun(atc, algod_client)
+        perform_simulate(atc, algod_client)
         return
 
     # Create group transaction to send asset and call method
@@ -105,19 +103,25 @@ def main():
     try:
         atc.execute(algod_client, 4)
     except Exception as e:
-        print(f"A Logic Exception was encountered: '{e}\n")
-        perform_dryrun(atc, algod_client)
+        perform_simulate(atc, algod_client)
         return
 
 
-def perform_dryrun(atc: AtomicTransactionComposer, client: algod.AlgodClient):
-    signed = atc.gather_signatures()
-    drr = transaction.create_dryrun(client, signed)
-    dryrun_result = DryrunResponse(client.dryrun(drr))
-    for txn in dryrun_result.txns:
-        if txn.app_call_rejected():
-            width = round(os.get_terminal_size().columns / 3)
-            print(txn.app_trace(StackPrinterConfig(max_value_width=width)))
+def perform_simulate(atc: AtomicTransactionComposer, client: algod.AlgodClient):
+    r = atc.simulate(client).txn_groups[0]
+    print(f"Failure Message: {r.failure_message}")
+    print(f"Failed Transaction: {r.failed_at[0]}")
+
+    for i, res in enumerate(r.txn_results):
+
+        print(f"Txn {i} Results:")
+        for key, value in res.result.__dict__.items():
+            if key != "txn":
+                print(f"  {key}: {value}")
+            else:
+                print(f"  txn: {value.transaction.get_txid()}")
+                print(f"  txn_type: {value.transaction.type}")
+                print(f"  txn_fee: {value.transaction.fee}")
 
 
 if __name__ == "__main__":
