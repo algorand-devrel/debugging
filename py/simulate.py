@@ -14,6 +14,7 @@ from util import (
 )
 from beaker import sandbox
 import os
+import json
 
 
 def main():
@@ -108,20 +109,26 @@ def main():
 
 
 def perform_simulate(atc: AtomicTransactionComposer, client: algod.AlgodClient):
-    r = atc.simulate(client).txn_groups[0]
+    r = atc.simulate(client)
     print(f"Failure Message: {r.failure_message}")
-    print(f"Failed Transaction: {r.failed_at[0]}")
+    print(f"Simulation Transaction Results:")
 
-    for i, res in enumerate(r.txn_results):
+    for g in r.simulate_response["txn-groups"]:
+        for i, t in enumerate(g["txn-results"]):
+            print(f"  Transaction {i}:")
+            for k, v in t["txn-result"].items():
+                print(f"    {k}: {v}")
 
-        print(f"Txn {i} Results:")
-        for key, value in res.result.__dict__.items():
-            if key != "txn":
-                print(f"  {key}: {value}")
-            else:
-                print(f"  txn: {value.transaction.get_txid()}")
-                print(f"  txn_type: {value.transaction.type}")
-                print(f"  txn_fee: {value.transaction.fee}")
+    failed_at_msg = f"Failed at: gtxn index {r.failed_at[0]}"
+    if len(r.failed_at) > 1:
+        failed_at_msg += (
+            f", inner tnx index {r.failed_at[-1]} at depth level {len(r.failed_at) - 1}"
+        )
+
+    print(failed_at_msg)
+    print(f"ABI Return Values:")
+    for res in r.abi_results:
+        print(f"  {res.tx_id}: {res.return_value}")
 
 
 if __name__ == "__main__":
